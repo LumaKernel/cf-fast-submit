@@ -1,6 +1,6 @@
 // ===UserScript===
 // @name         codeforces append submit form (only contest)
-// @namespace    http://github.com/lumakernel/
+// @namespace    https://twitter.com/lumc_
 // @version      1.0
 // @description  as the title
 // @author       Luma
