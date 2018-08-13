@@ -1,15 +1,14 @@
-// ===UserScript===
-// @name         codeforces append submit form (only contest)
+// ==UserScript==
+// @name         cf-append-form
+// @name:ja      cf-append-form
 // @namespace    https://twitter.com/lumc_
 // @version      1.0
-// @description  as the title
+// @description  append the form to submit to codeforces contest problem page.
+// @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
 // @match        http*://codeforces.com/contest/*/problem/*
 // @grant        none
-// ===/UserScript===
-
-// append submit form
-// //codeforeces.com/contest/*/problem/*
+// ==/UserScript==
 
 /* global $ ace alwaysDisable Codeforces */
 
@@ -285,3 +284,4 @@
     }
   }
 })()
+
