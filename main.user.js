@@ -22,42 +22,11 @@
   let $toggleEditor
   let $tabSize
   let $selectProblem
-
   let editor
+
   // got from submit page
-  /* eslint-next-line object-property-newline : 0 */
-  const extensionMap = {
-    1: 'program.cpp',
-    2: 'program.cpp',
-    3: 'program.dpr',
-    4: 'program.pas',
-    6: 'program.php',
-    7: 'program.py',
-    8: 'program.rb',
-    9: 'program.cs',
-    10: 'program.c',
-    12: 'program.hs',
-    13: 'program.pl',
-    19: 'program.ml',
-    20: '[^{}]*objects+(w+).*|$1.scala',
-    28: 'program.d',
-    31: 'a.py',
-    32: 'program.go',
-    34: 'program.js',
-    36: '[^{}]*publics+(final)?s*classs+(w+).*|$2.java',
-    40: 'a.py',
-    41: 'a.py',
-    42: 'program.cpp',
-    43: 'program.c',
-    48: 'program.kt',
-    49: 'program.rs',
-    50: 'program.cpp',
-    51: 'program.pas',
-    52: 'program.cpp',
-    53: 'program.cpp',
-    54: 'program.cpp',
-    55: 'program.js'
-  }
+  /* eslint-disable-next-line object-property-newline */
+  const extensionMap = { 1: 'program.cpp', 2: 'program.cpp', 3: 'program.dpr', 4: 'program.pas', 6: 'program.php', 7: 'program.py', 8: 'program.rb', 9: 'program.cs', 10: 'program.c', 12: 'program.hs', 13: 'program.pl', 19: 'program.ml', 20: '[^{}]*objects+(w+).*|$1.scala', 28: 'program.d', 31: 'a.py', 32: 'program.go', 34: 'program.js', 36: '[^{}]*publics+(final)?s*classs+(w+).*|$2.java', 40: 'a.py', 41: 'a.py', 42: 'program.cpp', 43: 'program.c', 48: 'program.kt', 49: 'program.rs', 50: 'program.cpp', 51: 'program.pas', 52: 'program.cpp', 53: 'program.cpp', 54: 'program.cpp', 55: 'program.js' }
 
   initAppendForm()
 
