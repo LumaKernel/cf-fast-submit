@@ -2,7 +2,7 @@
 // @name         cf-append-form
 // @name:ja      cf-append-form
 // @namespace    https://twitter.com/lumc_
-// @version      1.0
+// @version      1.1
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
@@ -10,7 +10,7 @@
 // @grant        none
 // ==/UserScript==
 
-/* global $ ace alwaysDisable Codeforces */
+/* global $ ace alwaysDisable */
 
 ;(function () {
   'use strict'
@@ -22,12 +22,10 @@
   let $toggleEditor
   let $tabSize
   let $selectProblem
-  let contestId
-  let participantId
 
   let editor
   // got from submit page
-  /* eslint : */
+  /* eslint-next-line object-property-newline : 0 */
   const extensionMap = {
     1: 'program.cpp',
     2: 'program.cpp',
@@ -60,6 +58,7 @@
     54: 'program.cpp',
     55: 'program.js'
   }
+
   initAppendForm()
 
   async function initAppendForm () {
@@ -99,13 +98,20 @@
 
     $selectProblem.prop('hidden', true)
 
-    contestId = +raw.match(/contestId\s*=\s*(\d+)/)[1]
-    participantId = +raw.match(/participantId\s*:\s*(\d+)/)[1]
+    const update =
+      getFuctionDef(raw, 'updateSubmitButtonState') ||
+      getFuctionDef(raw, 'updateProblemLockInfo')
+    if (update) {
+      try {
+        // run as object
+        /* eslint-disable-next-line no-eval */
+        eval(`;(${update})();`)
+      } catch (e) {}
+    }
 
     applyEditorVisibility()
     setAceMode()
     updateFilesAndLimits()
-    updateProblemLockInfo()
 
     $toggleEditor.on('change', () => {
       applyEditorVisibility()
@@ -248,40 +254,11 @@
     return true
   }
 
-  function updateProblemLockInfo () {
-    var problemIndex = $('select[name=submittedProblemIndex]').val()
-
-    updateFilesAndLimits()
-    if (problemIndex !== '') {
-      $.post(
-        '/data/problemLock',
-        {
-          action: 'checkProblemLock',
-          contestId,
-          participantId,
-          problemIndex
-        },
-        function (response) {
-          if (response['problemLocked'] === 'true') {
-            Codeforces.setAjaxFormErrors('form table', {
-              error__submittedProblemIndex:
-                'Problem was locked for submission, it is impossible to resubmit it'
-            })
-            $('.submit-form :submit').attr('disabled', 'disabled')
-
-            $('#submittedProblemFiles').text('')
-            $('#submittedProblemLimits').text('')
-          } else {
-            Codeforces.clearAjaxFormErrors('form table')
-            $('.submit-form :submit').removeAttr('disabled')
-          }
-        },
-        'json'
-      )
-    } else {
-      Codeforces.clearAjaxFormErrors('form table')
-      $('.submit-form :submit').attr('disabled', 'disabled')
-    }
+  // not so good method
+  function getFuctionDef (script, fname) {
+    const res = script.match(
+      new RegExp(`(?:^|\\n)(.*)function\\s+${fname}[\\s\\S]+\\n\\1}`)
+    )
+    return res && res[0]
   }
 })()
-
