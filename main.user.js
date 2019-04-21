@@ -1,19 +1,22 @@
 // ==UserScript==
-// @name         cf-append-form
-// @name:ja      cf-append-form
+// @name         cf-fast-submit
+// @name:ja      cf-fast-submit
 // @namespace    https://twitter.com/lumc_
-// @version      1.1
+// @version      2.0
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
 // @match        http*://codeforces.com/contest/*/problem/*
+// @match        http*://codeforces.com/gym/*/problem/*
+// @match        http*://codeforces.com/problemset/problem/*
 // @grant        none
 // ==/UserScript==
 
-/* global $ ace alwaysDisable */
+/* global $ ace Codeforces */
 
 ;(function () {
   'use strict'
+  const SCRIPT_NAME = 'CF APPEND FORM'
   const origin = location.origin
   const pathname = location.pathname
   const modelist = ace.require('ace/ext/modelist')
@@ -24,22 +27,75 @@
   let $selectProblem
   let editor
 
+  const pattern = /(contest|gym)\/(.*)\/problem\/([^/])*\/?$/
+  let type // 'contest' | 'gym' | 'problemset'
+  let submitURL
+  let problemId
+  let contestId
+  let participantId
+
   // got from submit page
   /* eslint-disable-next-line object-property-newline */
   const extensionMap = { 1: 'program.cpp', 2: 'program.cpp', 3: 'program.dpr', 4: 'program.pas', 6: 'program.php', 7: 'program.py', 8: 'program.rb', 9: 'program.cs', 10: 'program.c', 12: 'program.hs', 13: 'program.pl', 19: 'program.ml', 20: '[^{}]*objects+(w+).*|$1.scala', 28: 'program.d', 31: 'a.py', 32: 'program.go', 34: 'program.js', 36: '[^{}]*publics+(final)?s*classs+(w+).*|$2.java', 40: 'a.py', 41: 'a.py', 42: 'program.cpp', 43: 'program.c', 48: 'program.kt', 49: 'program.rs', 50: 'program.cpp', 51: 'program.pas', 52: 'program.cpp', 53: 'program.cpp', 54: 'program.cpp', 55: 'program.js' }
 
-  initAppendForm()
+  const regenerateInterval = 30 // minutes
+  const retryInterval = 200 // msec
 
-  async function initAppendForm () {
-    // only problem page
-    const pattern = /(.*)\/problem\/([^/])*\/?$/
-    if (!pattern.test(pathname)) return
+  let doRegenerateOnSubmit = false
 
-    const submitURL = origin + pathname.match(pattern)[1] + '/submit'
-    const probremID = pathname.match(pattern)[2]
+  checkRequirements()
+
+  if (!initInfo()) return
+
+  tryToInit(true)
+
+  function checkRequirements () {
+    if (!$) console.error(`[${SCRIPT_NAME}] there's no jQuery.`)
+  }
+
+  function initInfo () {
+    if (pathname.match(/^\/problemset\//)) {
+      type = 'problemset'
+      submitURL = origin + '/problemset/submit'
+    } else {
+      pathname.match(pattern)
+      const match = pathname.match(pattern)
+      if (!match) return false
+      type = match[1]
+      submitURL = origin + '/' + type + '/' + match[2] + '/submit'
+      problemId = match[3]
+    }
+    return true
+  }
+
+  async function tryToInit (first) {
+    while (!await initAppendForm(first, false)) await delay(retryInterval)
+  }
+
+  function delay (ms) {
+    return new Promise((resolve, reject) => {
+      setTimeout(resolve, ms)
+    })
+  }
+
+  async function initAppendForm (first = true, doNotRegenerateOnSubmit = false) {
+    let code = ''
+    let srcFile
+
     const raw = await $.get(submitURL)
-    $form = $(raw).find('form.submit-form')
+    const $newForm = $(raw).find('form.submit-form')
+    if (!$newForm.length) return false
+
+    if (!first) {
+      code = getCode() || ''
+      srcFile = $form.find('[name=sourceFile]')
+      removeForm()
+    }
+
+    $form = $newForm
+
     $('.problem-statement').append($form)
+
     editor = ace.edit('editor')
 
     $form.attr('action', submitURL + $form.attr('action'))
@@ -56,7 +112,11 @@
       enableBasicAutocompletion: true
     })
 
-    $selectProblem.val(probremID)
+    if (type === 'contest' || type === 'gym') {
+      const existsProblemID = $selectProblem.find('option').filter((_, el) => $(el).val() === problemId).length
+      if (!existsProblemID) return false
+      $selectProblem.val(problemId)
+    }
 
     // そのままdisabledにするとformに含まれなくなるので
     const $cloneSelectProblem = $($selectProblem.prop('outerHTML'))
@@ -67,15 +127,10 @@
 
     $selectProblem.prop('hidden', true)
 
-    const update =
-      getFuctionDef(raw, 'updateSubmitButtonState') ||
-      getFuctionDef(raw, 'updateProblemLockInfo')
-    if (update) {
-      try {
-        // run as object
-        /* eslint-disable-next-line no-eval */
-        eval(`;(${update})();`)
-      } catch (e) {}
+    if (type === 'contest' || type === 'problemset') {
+      contestId = raw.match(/contestId\s*=\s*(\d+)/)[1]
+      participantId = raw.match(/participantId\s*:\s*(\d+)/)[1]
+      updateProblemLockInfo()
     }
 
     applyEditorVisibility()
@@ -121,12 +176,27 @@
     })
 
     $form.on('submit', preSubmit)
+
+    if (!first) {
+      if (code) setCode(code)
+      if (srcFile) $form.find('[name=sourceFile]').replaceWith(srcFile)
+    }
+
+    doRegenerateOnSubmit = false
+
+    if (!doNotRegenerateOnSubmit) {
+      delay(1000 * 60 * regenerateInterval).then(() => { doRegenerateOnSubmit = true })
+    }
+
+    return true
   }
+
   function setAceMode () {
     var filePath = extensionMap[$programType.val()]
     const mode = modelist.getModeForPath(filePath).mode
     if (editor) editor.session.setMode(mode)
   }
+
   function applyEditorVisibility () {
     if ($('#toggleEditorCheckbox').is(':checked')) {
       $('#editor').hide()
@@ -177,7 +247,17 @@
     }
   }
 
+  function removeForm () {
+    $('.submit-form').remove()
+  }
+
   function preSubmit () {
+    if (doRegenerateOnSubmit) {
+      initAppendForm(false, true).then(() => {
+        $form.trigger('submit')
+      })
+      return false
+    }
     const button = $form.find('input.submit')
     const img = $form.find('img.ajax-loading-gif')
     if ($(this).hasAttr('data-submitting')) {
@@ -187,6 +267,7 @@
       return false
     }
     var result = callback.call(this)
+    let alwaysDisable = false
     if (result || alwaysDisable) {
       img.show()
       button.prop('disabled', true)
@@ -223,11 +304,47 @@
     return true
   }
 
-  // not so good method
-  function getFuctionDef (script, fname) {
-    const res = script.match(
-      new RegExp(`(?:^|\\n)(.*)function\\s+${fname}[\\s\\S]+\\n\\1}`)
-    )
-    return res && res[0]
+  function getCode () {
+    const $el = $('#sourceCodeTextarea')
+    return $el.val()
   }
+
+  function setCode (code) {
+    const $el = $('#sourceCodeTextarea')
+    $el.val(code)
+    $el.trigger('change')
+  }
+
+  /* eslint-disable */
+  // from contest submit page (/contest/****/submit) {{{
+
+  function updateProblemLockInfo () {
+    var problemIndex = $('select[name=submittedProblemIndex]').val()
+
+    updateFilesAndLimits()
+    if (problemIndex != '') {
+      $.post('/data/problemLock',
+        {action: 'checkProblemLock', contestId, participantId, problemIndex: problemIndex},
+        function (response) {
+          if (response['problemLocked'] == 'true') {
+            Codeforces.setAjaxFormErrors('form table',
+              {error__submittedProblemIndex: 'Problem was locked for submission, it is impossible to resubmit it'})
+            $('.submit-form :submit').attr('disabled', 'disabled')
+
+            $('#submittedProblemFiles').text('')
+            $('#submittedProblemLimits').text('')
+          } else {
+            Codeforces.clearAjaxFormErrors('form table')
+            $('.submit-form :submit').removeAttr('disabled')
+          }
+        },
+        'json'
+      )
+    } else {
+      Codeforces.clearAjaxFormErrors('form table')
+      $('.submit-form :submit').attr('disabled', 'disabled')
+    }
+  }
+  // }}}
+  /* eslint-enable */
 })()
