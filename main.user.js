@@ -2,13 +2,16 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://twitter.com/lumc_
-// @version      2.0
+// @version      2.2
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
-// @match        http*://codeforces.com/contest/*/problem/*
-// @match        http*://codeforces.com/gym/*/problem/*
-// @match        http*://codeforces.com/problemset/problem/*
+// @match        http://codeforces.com/contest/*/problem/*
+// @match        http://codeforces.com/gym/*/problem/*
+// @match        http://codeforces.com/problemset/problem/*
+// @match        https://codeforces.com/contest/*/problem/*
+// @match        https://codeforces.com/gym/*/problem/*
+// @match        https://codeforces.com/problemset/problem/*
 // @grant        none
 // ==/UserScript==
 
@@ -16,10 +19,11 @@
 
 ;(function () {
   'use strict'
-  const SCRIPT_NAME = 'CF APPEND FORM'
+  const SCRIPT_NAME = 'cf fast submit'
   const origin = location.origin
   const pathname = location.pathname
   const modelist = ace.require('ace/ext/modelist')
+  const logged = !!$('a').filter((_, el) => $(el).text() === 'Logout').length
   let $form
   let $programType
   let $toggleEditor
@@ -43,14 +47,25 @@
 
   let doRegenerateOnSubmit = false
 
-  checkRequirements()
-
+  if (!checkRequirements()) return
   if (!initInfo()) return
 
   tryToInit(true)
 
   function checkRequirements () {
-    if (!$) console.error(`[${SCRIPT_NAME}] there's no jQuery.`)
+    if (!logged) {
+      console.error(`[${SCRIPT_NAME}] not logged in.`)
+      return false
+    }
+    if (!$) {
+      console.error(`[${SCRIPT_NAME}] not found jQuery.`)
+      return false
+    }
+    if (!ace) {
+      console.error(`[${SCRIPT_NAME}] not found ace.`)
+      return false
+    }
+    return true
   }
 
   function initInfo () {
@@ -69,7 +84,11 @@
   }
 
   async function tryToInit (first) {
-    while (!await initAppendForm(first, false)) await delay(retryInterval)
+    for (let i = 0; i < 100; i++) {
+      if (await initAppendForm(first, false)) return
+      await delay(retryInterval)
+    }
+    console.error(`[${SCRIPT_NAME}] tried some times but failed.`)
   }
 
   function delay (ms) {
