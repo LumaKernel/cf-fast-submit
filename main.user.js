@@ -2,7 +2,7 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://twitter.com/lumc_
-// @version      2.2
+// @version      2.3
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
@@ -85,7 +85,13 @@
 
   async function tryToInit (first) {
     for (let i = 0; i < 100; i++) {
-      if (await initAppendForm(first, false)) return
+      try {
+        if (await initAppendForm(first, false)) return
+      } catch (e) {
+        removeForm()
+        console.error(`[${SCRIPT_NAME}] unexpected error has been occured.`)
+        throw e
+      }
       await delay(retryInterval)
     }
     console.error(`[${SCRIPT_NAME}] tried some times but failed.`)
@@ -147,10 +153,12 @@
     $selectProblem.prop('hidden', true)
 
     if (type === 'contest' || type === 'problemset') {
-      contestId = raw.match(/contestId\s*=\s*(\d+)/)[1]
-      participantId = raw.match(/participantId\s*:\s*(\d+)/)[1]
-      updateProblemLockInfo()
+      contestId = (raw.match(/contestId\s*=\s*(\d+)/) || {1: 0})[1]
+      participantId = (raw.match(/participantId\s*:\s*(\d+)/) || {1: 0})[1]
     }
+
+    if (raw.match('updateProblemLockInfo')) updateProblemLockInfo()
+    if (raw.match('updateSubmitButtonState')) updateSubmitButtonState()
 
     applyEditorVisibility()
     setAceMode()
@@ -362,6 +370,16 @@
     } else {
       Codeforces.clearAjaxFormErrors('form table')
       $('.submit-form :submit').attr('disabled', 'disabled')
+    }
+  }
+  function updateSubmitButtonState () {
+    var problemIndex = $('select[name=submittedProblemIndex]').val()
+
+    updateFilesAndLimits()
+    if (problemIndex == '') {
+      $('.submit-form :submit').attr('disabled', 'disabled')
+    } else {
+      $('.submit-form :submit').removeAttr('disabled')
     }
   }
   // }}}
