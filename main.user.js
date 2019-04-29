@@ -2,7 +2,7 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://twitter.com/lumc_
-// @version      2.3
+// @version      2.4
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
@@ -31,7 +31,7 @@
   let $selectProblem
   let editor
 
-  const pattern = /(contest|gym)\/(.*)\/problem\/([^/])*\/?$/
+  const pattern = /(contest|gym)\/(.*)\/problem\/([^/]*)\/?$/
   let type // 'contest' | 'gym' | 'problemset'
   let submitURL
   let problemId
@@ -43,7 +43,8 @@
   const extensionMap = { 1: 'program.cpp', 2: 'program.cpp', 3: 'program.dpr', 4: 'program.pas', 6: 'program.php', 7: 'program.py', 8: 'program.rb', 9: 'program.cs', 10: 'program.c', 12: 'program.hs', 13: 'program.pl', 19: 'program.ml', 20: '[^{}]*objects+(w+).*|$1.scala', 28: 'program.d', 31: 'a.py', 32: 'program.go', 34: 'program.js', 36: '[^{}]*publics+(final)?s*classs+(w+).*|$2.java', 40: 'a.py', 41: 'a.py', 42: 'program.cpp', 43: 'program.c', 48: 'program.kt', 49: 'program.rs', 50: 'program.cpp', 51: 'program.pas', 52: 'program.cpp', 53: 'program.cpp', 54: 'program.cpp', 55: 'program.js' }
 
   const regenerateInterval = 30 // minutes
-  const retryInterval = 200 // msec
+  const retryInterval = 300 // msec
+  const retryTimes = 400
 
   let doRegenerateOnSubmit = false
 
@@ -84,7 +85,7 @@
   }
 
   async function tryToInit (first) {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < retryTimes; i++) {
       try {
         if (await initAppendForm(first, false)) return
       } catch (e) {
@@ -92,6 +93,7 @@
         console.error(`[${SCRIPT_NAME}] unexpected error has been occured.`)
         throw e
       }
+      removeForm()
       await delay(retryInterval)
     }
     console.error(`[${SCRIPT_NAME}] tried some times but failed.`)
@@ -109,6 +111,8 @@
 
     const raw = await $.get(submitURL)
     const $newForm = $(raw).find('form.submit-form')
+    console.log(window.d = $newForm)
+    debugger
     if (!$newForm.length) return false
 
     if (!first) {
