@@ -1,6 +1,6 @@
 {
   "name": "cf-fast-submit",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "append the form to submit to codeforces contest problem page.",
   "main": "main.user.js",
   "scripts": {

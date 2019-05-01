@@ -2,7 +2,7 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://twitter.com/lumc_
-// @version      2.4
+// @version      2.5
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
@@ -30,6 +30,8 @@
   let $tabSize
   let $selectProblem
   let editor
+  const startId = '0'
+  const defaultProblemIds = ['A', 'A1']
 
   const pattern = /(contest|gym)\/(.*)\/problem\/([^/]*)\/?$/
   let type // 'contest' | 'gym' | 'problemset'
@@ -111,8 +113,6 @@
 
     const raw = await $.get(submitURL)
     const $newForm = $(raw).find('form.submit-form')
-    console.log(window.d = $newForm)
-    debugger
     if (!$newForm.length) return false
 
     if (!first) {
@@ -142,8 +142,18 @@
     })
 
     if (type === 'contest' || type === 'gym') {
-      const existsProblemID = $selectProblem.find('option').filter((_, el) => $(el).val() === problemId).length
-      if (!existsProblemID) return false
+      const existsProblemID = id => $selectProblem.find('option').filter((_, el) => $(el).val() === id).length
+      let exists = existsProblemID(problemId)
+      if (!exists && problemId === startId) {
+        for (const id of defaultProblemIds) {
+          if (existsProblemID(id)) {
+            problemId = id
+            exists = true
+            break
+          }
+        }
+      }
+      if (!exists) return false
       $selectProblem.val(problemId)
     }
 
@@ -151,6 +161,7 @@
     const $cloneSelectProblem = $($selectProblem.prop('outerHTML'))
     $cloneSelectProblem.prop('disabled', true)
     $cloneSelectProblem.removeAttr('name')
+    $cloneSelectProblem.val(problemId)
     $cloneSelectProblem.attr('id', 'submitted_problem_index_fake_display')
     $selectProblem.after($cloneSelectProblem)
 
