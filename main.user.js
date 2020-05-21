@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
-// @namespace    https://twitter.com/lumc_
+// @namespace    https://github.com/LumaKernel/cf-fast-submit
 // @version      2.6
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
