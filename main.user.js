@@ -45,8 +45,8 @@
   const extensionMap = {2: "program.cpp", 3: "program.dpr", 4: "program.pas", 6: "program.php", 7: "program.py", 8: "program.rb", 9: "program.cs", 12: "program.hs", 13: "program.pl", 19: "program.ml", 20: "[^{}]*object\s+(\w+).*|$1.scala", 28: "program.d", 31: "a.py", 32: "program.go", 34: "program.js", 36: "[^{}]*public\s+(final)?\s*class\s+(\w+).*|$2.java", 40: "a.py", 41: "a.py", 42: "program.cpp", 43: "program.c", 48: "program.kt", 49: "program.rs", 50: "program.cpp", 51: "program.pas", 52: "program.cpp", 54: "program.cpp", 55: "program.js", 59: "program.cpp", 60: "[^{}]*public\s+(final)?\s*class\s+(\w+).*|$2.java", 61: "program.cpp"}
 
   const regenerateInterval = 30 // minutes
-  const retryInterval = 300 // msec
-  const retryTimes = 400
+  const retryInterval = 1000 // msec
+  const retryTimes = 20
 
   let doRegenerateOnSubmit = false
 
