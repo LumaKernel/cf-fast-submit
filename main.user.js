@@ -30,15 +30,17 @@
   let $tabSize
   let $selectProblem
   let editor
+  // ~/0 というURLは A 問題として扱われる
   const startId = '0'
   const defaultProblemIds = ['A', 'A1']
-
   const pattern = /(contest|gym)\/(.*)\/problem\/([^/]*)\/?$/
   let type // 'contest' | 'gym' | 'problemset'
   let submitURL
   let problemId
   let contestId
   let participantId
+  const problemsetPattern = /problemset\/problem\/([^/]*)\/([^/]*)\/?$/
+
 
   // got from submit page
   /* eslint-disable-next-line object-property-newline */
@@ -48,7 +50,8 @@
   const retryInterval = 1000 // msec
   const retryTimes = 20
 
-let doRegenerateOnSubmit = false
+  let doRegenerateOnSubmit = false
+
   if (!checkRequirements()) return
   if (!initInfo()) return
   tryToInit(true)
