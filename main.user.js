@@ -2,7 +2,7 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://github.com/LumaKernel/cf-fast-submit
-// @version      2.6
+// @version      2.7
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
@@ -19,6 +19,9 @@
 
 ;(function () {
   'use strict'
+
+  const openNewWindow = false
+
   const SCRIPT_NAME = 'cf fast submit'
   const origin = location.origin
   const pathname = location.pathname
@@ -268,6 +271,11 @@
   function removeForm () {
     $('.submit-form').remove()
   }
+  function succeedSubmit() {
+    if(openNewWindow) {
+      window.open(location.href)
+    }
+  }
   function preSubmit () {
     if (doRegenerateOnSubmit) {
       initAppendForm(false, true).then(() => {
@@ -278,6 +286,7 @@
     const button = $form.find('input.submit')
     const img = $form.find('img.ajax-loading-gif')
     if ($(this).hasAttr('data-submitting')) {
+      succeedSubmit()
       return true
     }
     if (button.prop('disabled')) {
@@ -293,6 +302,7 @@
         button.prop('disabled', false)
       }, alwaysDisable ? 1000 : 10000)
     }
+    if(result) succeedSubmit()
     return result
   }
   function callback () {
