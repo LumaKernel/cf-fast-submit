@@ -2,16 +2,18 @@
 // @name         cf-fast-submit
 // @name:ja      cf-fast-submit
 // @namespace    https://github.com/LumaKernel/cf-fast-submit
-// @version      2.7
+// @version      2.8
 // @description  append the form to submit to codeforces contest problem page.
 // @description:ja codeforcesのコンテストの問題ページに提出フォームを置くツール.
 // @author       Luma
 // @match        http://codeforces.com/contest/*/problem/*
 // @match        http://codeforces.com/gym/*/problem/*
 // @match        http://codeforces.com/problemset/problem/*
+// @match        http://codeforces.com/group/*/contest/*/problem/*
 // @match        https://codeforces.com/contest/*/problem/*
 // @match        https://codeforces.com/gym/*/problem/*
 // @match        https://codeforces.com/problemset/problem/*
+// @match        https://codeforces.com/group/*/contest/*/problem/*
 // @grant        none
 // ==/UserScript==
 
@@ -37,12 +39,13 @@
   const startId = '0'
   const defaultProblemIds = ['A', 'A1']
   const pattern = /(contest|gym)\/(.*)\/problem\/([^/]*)\/?$/
-  let type // 'contest' | 'gym' | 'problemset'
+  const problemsetPattern = /problemset\/problem\/([^/]*)\/([^/]*)\/?$/
+  const groupPattern = /group\/([^/]+)\/contest\/([^/]*)\/problem\/([^/]*)\/?$/
+  let type // 'contest' | 'gym' | 'problemset' | 'group'
   let submitURL
   let problemId
   let contestId
   let participantId
-  const problemsetPattern = /problemset\/problem\/([^/]*)\/([^/]*)\/?$/
 
 
   // got from submit page
@@ -80,6 +83,13 @@
       const match = pathname.match(problemsetPattern)
       contestId = match[1]
       problemId = match[2]
+    } else if (pathname.match(/^\/group\//)) {
+      type = 'group'
+      const match = pathname.match(groupPattern)
+      const groupId = match[1]
+      contestId = match[2]
+      problemId = match[3]
+      submitURL = `${origin}/group/${groupId}/contest/${contestId}/submit`
     } else {
       pathname.match(pattern)
       const match = pathname.match(pattern)
@@ -113,10 +123,12 @@
     let code = ''
     let srcFile
     const ajaxData = {}
+    console.log(submitURL)
     const raw = await $.ajax(submitURL, {
       method: 'get',
       ...ajaxData
     })
+    console.log(raw)
     const $newForm = $(raw).find('form.submit-form')
     if (!$newForm.length) return false
     if (!first) {
@@ -138,7 +150,7 @@
     editor.setOptions({
       enableBasicAutocompletion: true
     })
-    if (type === 'contest' || type === 'gym') {
+    if (type === 'contest' || type === 'gym' || type === 'group') {
       const existsProblemID = id => $selectProblem.find('option').filter((_, el) => $(el).val() === id).length
       let exists = existsProblemID(problemId)
       if (!exists && problemId === startId) {
