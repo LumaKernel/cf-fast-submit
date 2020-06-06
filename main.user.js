@@ -123,12 +123,10 @@
     let code = ''
     let srcFile
     const ajaxData = {}
-    console.log(submitURL)
     const raw = await $.ajax(submitURL, {
       method: 'get',
       ...ajaxData
     })
-    console.log(raw)
     const $newForm = $(raw).find('form.submit-form')
     if (!$newForm.length) return false
     if (!first) {
