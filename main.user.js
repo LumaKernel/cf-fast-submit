@@ -10,10 +10,12 @@
 // @match        http://codeforces.com/gym/*/problem/*
 // @match        http://codeforces.com/problemset/problem/*
 // @match        http://codeforces.com/group/*/contest/*/problem/*
+// @match        http://*.contest.codeforces.com/group/*/contest/*/problem/*
 // @match        https://codeforces.com/contest/*/problem/*
 // @match        https://codeforces.com/gym/*/problem/*
 // @match        https://codeforces.com/problemset/problem/*
 // @match        https://codeforces.com/group/*/contest/*/problem/*
+// @match        https://*.contest.codeforces.com/group/*/contest/*/problem/*
 // @grant        none
 // ==/UserScript==
 
