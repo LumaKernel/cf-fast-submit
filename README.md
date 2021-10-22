@@ -5,7 +5,7 @@ You can submit from the **Codeforces** contest problem page **directly**.
 
 ## Install
 
-Click [userscript install link](https://greasyfork.org/scripts/371117-cf-append-form/code/cf-append-form.user.js)
+Click [userscript install link](https://github.com/LumaKernel/cf-fast-submit/raw/master/main.user.js)
 
 ## Links
 
