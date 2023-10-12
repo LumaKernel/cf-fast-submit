@@ -30,7 +30,7 @@
   const origin = location.origin
   const pathname = location.pathname
   const modelist = ace.require('ace/ext/modelist')
-  const logged = !!$('a').filter((_, el) => $(el).text() === 'Logout').length
+  const logged = !!$('a').filter((_, el) => $(el).text() === 'Выйти' || $(el).text() === 'Logout').length
   let $form
   let $programType
   let $toggleEditor
