@@ -52,13 +52,50 @@
 
   // got from submit page
   /* eslint-disable-next-line object-property-newline */
-  const extensionMap = {3: "program.dpr", 4: "program.pas", 6: "program.php", 7: "program.py", 9: "program.cs", 12: "program.hs", 13: "program.pl", 19: "program.ml",
-                        20: "[^{}]*object\\s+(\\w+).*|$1.scala", 28: "program.d", 31: "a.py", 32: "program.go", 34: "program.js", 36: "[^{}]*public\\s+(final)?\\s*class\\s+(\\w+).*|$2.java",
-                        40: "a.py", 41: "a.py", 43: "program.c", 48: "program.kt", 49: "program.rs", 50: "program.cpp", 51: "program.pas", 52: "program.cpp", 54: "program.cpp", 55: "program.js", 59: "program.cpp",
-                        60: "[^{}]*public\\s+(final)?\\s*class\\s+(\\w+).*|$2.java", 61: "program.cpp", 65: "program.cs", 67: "program.rb",
-                        70: "a.py", 73: "program.cpp", 74:"[^{}]*public\\s+(final)?\\s*class\\s+(\\w+).*|$2.java", 75:"program.rs", 77:"program.kt", 79:"program.cs",
-                        80:"program.c", 83: "program.kt",87:"[^{}]*public\\s+(final)?\\s*class\\s+(\\w+).*|$2.java", 88: "program.kt", 89: "program.cpp",
-                        90: "program.cpp", 91:"program.cpp",}
+  const extensionMap = {}
+  const nameExtensionReg = [
+    [/C\+\+(\d+)?/i, 'cpp'],
+    [/G\+\+(\d+)?/i, 'cpp'],
+    [/\bC(\d+)?\b/i, 'c'],
+    [/PyPy/i, 'py'],
+    [/Python(\d+)?/i, 'py'],
+    [/Java(\d+)?/i, 'java'],
+    [/Kotlin/i, 'kt'],
+    [/JavaScript/i, 'js'],
+    [/TypeScript/i, 'ts'],
+    [/Ruby/i, 'rb'],
+    [/Go/i, 'go'],
+    [/Rust/i, 'rs'],
+    [/PHP/i, 'php'],
+    [/Swift/i, 'swift'],
+    [/Scala/i, 'scala'],
+    [/Perl/i, 'pl'],
+    [/Haskell/i, 'hs'],
+    [/R/i, 'r'],
+    [/D/i, 'd'],
+    [/Lua/i, 'lua'],
+    [/Pascal/i, 'pas'],
+    [/Objective-C/i, 'm'],
+    [/C#/i, 'cs'],
+    [/VB/i, 'vb'],
+    [/F#/i, 'fs'],
+    [/Fortran/i, 'f90'],
+    [/Ada/i, 'adb'],
+    [/Erlang/i, 'erl'],
+    [/Elixir/i, 'ex'],
+    [/OCaml/i, 'ml'],
+    [/Prolog/i, 'pl'],
+    [/Scheme/i, 'scm'],
+    [/Common Lisp/i, 'lisp'],
+    [/Julia/i, 'jl'],
+    [/Groovy/i, 'groovy'],
+    [/Tcl/i, 'tcl'],
+    [/COBOL/i, 'cob'],
+    [/Racket/i, 'rkt'],
+    [/Crystal/i, 'cr'],
+    [/Nim/i, 'nim'],
+    [/Zig/i, 'zig']
+  ]
 
   const regenerateInterval = 30 // minutes
   const retryInterval = 1000 // msec
@@ -153,6 +190,14 @@
     // codeforces default settings
     editor.setTheme('ace/theme/chrome')
     editor.setShowPrintMargin(false)
+    $programType.find('option').each((index, option) => {
+      for (const [reg, ext] of nameExtensionReg) {
+        if ($(option).text().match(reg)) {
+          extensionMap[$(option).val()] = `file.${ext}`
+          break
+        }
+      }
+    });
     editor.setOptions({
       enableBasicAutocompletion: true
     })
@@ -238,7 +283,7 @@
     return true
   }
   function setAceMode () {
-    var filePath = extensionMap[$programType.val()]
+    var filePath = extensionMap[$programType.val()] || "program.cpp"
     const mode = modelist.getModeForPath(filePath).mode
     if (editor) editor.session.setMode(mode)
   }
